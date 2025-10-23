@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f172a">
+  <title>obd2 code lookup</title>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      color: #fff;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: rgba(30, 41, 59, 0.5);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .header h1 {
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .header p {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.875rem;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    
+    .search-box {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      width: 20px;
+      height: 20px;
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 3rem;
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      color: #fff;
+      font-size: 1rem;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(30, 41, 59, 0.5);
+      color: #cbd5e1;
+    }
+    
+    .filter-btn.active {
+      background: #3b82f6;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.5);
+    }
+    
+    .results-count {
+      color: #94a3b8;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+    
+    .code-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .code-item {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(51, 65, 85, 0.5);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      transition: background 0.2s;
+    }
+    
+    .code-item:hover {
+      background: rgba(51, 65, 85, 0.5);
+    }
+    
+    .code-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .code-number {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #60a5fa;
+      text-transform: uppercase;
+    }
+    
+    .code-badge {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: 0.25rem;
+      background: #334155;
+      color: #cbd5e1;
+    }
+    
+    .code-description {
+      color: #cbd5e1;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    
+    .footer {
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+    
+    .footer-info {
+      background: rgba(30, 41, 59, 0.3);
+      border: 1px solid rgba(51, 65, 85, 0.5);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      text-align: center;
+    }
+    
+    .footer-info p {
+      color: #94a3b8;
+      font-size: 0.875rem;
+    }
+    
+    .footer-info span {
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+    
+    .no-results {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>obd2 code lookup</h1>
+    <p>diagnostic trouble code reference</p>
+  </div>
+  
+  <div class="container">
+    <div class="search-box">
+      <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+      <input 
+        type="text" 
+        class="search-input" 
+        id="searchInput" 
+        placeholder="search by code or description..."
+      >
+    </div>
+    
+    <div class="filters" id="filters"></div>
+    
+    <div class="results-count" id="resultsCount"></div>
+    
+    <div class="code-list" id="codeList"></div>
+    
+    <div class="footer">
+      <div class="footer-info">
+        <p><span>code types:</span> p = powertrain, c = chassis, b = body, u = network</p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const obd2codes = [
+      { code: 'p0000', description: 'no dtc detected', system: 'powertrain' },
+      { code: 'p0001', description: 'fuel volume regulator control circuit/open', system: 'powertrain' },
+      { code: 'p0002', description: 'fuel volume regulator control circuit range/performance', system: 'powertrain' },
+      { code: 'p0010', description: 'camshaft position actuator circuit (bank 1)', system: 'powertrain' },
+      { code: 'p0011', description: 'camshaft position timing over-advanced (bank 1)', system: 'powertrain' },
+      { code: 'p0012', description: 'camshaft position timing over-retarded (bank 1)', system: 'powertrain' },
+      { code: 'p0030', description: 'ho2s heater control circuit (bank 1 sensor 1)', system: 'powertrain' },
+      { code: 'p0031', description: 'ho2s heater control circuit low (bank 1 sensor 1)', system: 'powertrain' },
+      { code: 'p0032', description: 'ho2s heater control circuit high (bank 1 sensor 1)', system: 'powertrain' },
+      { code: 'p0100', description: 'mass or volume air flow circuit malfunction', system: 'powertrain' },
+      { code: 'p0101', description: 'mass or volume air flow circuit range/performance problem', system: 'powertrain' },
+      { code: 'p0102', description: 'mass or volume air flow circuit low input', system: 'powertrain' },
+      { code: 'p0103', description: 'mass or volume air flow circuit high input', system: 'powertrain' },
+      { code: 'p0104', description: 'mass or volume air flow circuit intermittent', system: 'powertrain' },
+      { code: 'p0106', description: 'manifold absolute pressure/barometric pressure circuit range/performance', system: 'powertrain' },
+      { code: 'p0107', description: 'manifold absolute pressure/barometric pressure circuit low input', system: 'powertrain' },
+      { code: 'p0108', description: 'manifold absolute pressure/barometric pressure circuit high input', system: 'powertrain' },
+      { code: 'p0110', description: 'intake air temperature circuit malfunction', system: 'powertrain' },
+      { code: 'p0111', description: 'intake air temperature circuit range/performance problem', system: 'powertrain' },
+      { code: 'p0112', description: 'intake air temperature circuit low input', system: 'powertrain' },
+      { code: 'p0113', description: 'intake air temperature circuit high input', system: 'powertrain' },
+      { code: 'p0115', description: 'engine coolant temperature circuit malfunction', system: 'powertrain' },
+      { code: 'p0116', description: 'engine coolant temperature circuit range/performance problem', system: 'powertrain' },
+      { code: 'p0117', description: 'engine coolant temperature circuit low input', system: 'powertrain' },
+      { code: 'p0118', description: 'engine coolant temperature circuit high input', system: 'powertrain' },
+      { code: 'p0120', description: 'throttle position sensor/switch a circuit malfunction', system: 'powertrain' },
+      { code: 'p0121', description: 'throttle position sensor/switch a circuit range/performance problem', system: 'powertrain' },
+      { code: 'p0122', description: 'throttle position sensor/switch a circuit low input', system: 'powertrain' },
+      { code: 'p0123', description: 'throttle position sensor/switch a circuit high input', system: 'powertrain' },
+      { code: 'p0125', description: 'insufficient coolant temperature for closed loop fuel control', system: 'powertrain' },
+      { code: 'p0128', description: 'coolant thermostat (coolant temperature below thermostat regulating temperature)', system: 'powertrain' },
+      { code: 'p0130', description: 'o2 sensor circuit malfunction (bank 1 sensor 1)', system: 'powertrain' },
+      { code: 'p0131', description: 'o2 sensor circuit low voltage (bank 1 sensor 1)', system: 'powertrain' },
+      { code: 'p0132', description: 'o2 sensor circuit high voltage (bank 1 sensor 1)', system: 'powertrain' },
+      { code: 'p0133', description: 'o2 sensor circuit slow response (bank 1 sensor 1)', system: 'powertrain' },
+      { code: 'p0134', description: 'o2 sensor circuit no activity detected (bank 1 sensor 1)', system: 'powertrain' },
+      { code: 'p0135', description: 'o2 sensor heater circuit malfunction (bank 1 sensor 1)', system: 'powertrain' },
+      { code: 'p0136', description: 'o2 sensor circuit malfunction (bank 1 sensor 2)', system: 'powertrain' },
+      { code: 'p0137', description: 'o2 sensor circuit low voltage (bank 1 sensor 2)', system: 'powertrain' },
+      { code: 'p0138', description: 'o2 sensor circuit high voltage (bank 1 sensor 2)', system: 'powertrain' },
+      { code: 'p0140', description: 'o2 sensor circuit no activity detected (bank 1 sensor 2)', system: 'powertrain' },
+      { code: 'p0141', description: 'o2 sensor heater circuit malfunction (bank 1 sensor 2)', system: 'powertrain' },
+      { code: 'p0171', description: 'system too lean (bank 1)', system: 'powertrain' },
+      { code: 'p0172', description: 'system too rich (bank 1)', system: 'powertrain' },
+      { code: 'p0174', description: 'system too lean (bank 2)', system: 'powertrain' },
+      { code: 'p0175', description: 'system too rich (bank 2)', system: 'powertrain' },
+      { code: 'p0200', description: 'injector circuit malfunction', system: 'powertrain' },
+      { code: 'p0201', description: 'injector circuit malfunction - cylinder 1', system: 'powertrain' },
+      { code: 'p0202', description: 'injector circuit malfunction - cylinder 2', system: 'powertrain' },
+      { code: 'p0203', description: 'injector circuit malfunction - cylinder 3', system: 'powertrain' },
+      { code: 'p0204', description: 'injector circuit malfunction - cylinder 4', system: 'powertrain' },
+      { code: 'p0205', description: 'injector circuit malfunction - cylinder 5', system: 'powertrain' },
+      { code: 'p0206', description: 'injector circuit malfunction - cylinder 6', system: 'powertrain' },
+      { code: 'p0300', description: 'random/multiple cylinder misfire detected', system: 'powertrain' },
+      { code: 'p0301', description: 'cylinder 1 misfire detected', system: 'powertrain' },
+      { code: 'p0302', description: 'cylinder 2 misfire detected', system: 'powertrain' },
+      { code: 'p0303', description: 'cylinder 3 misfire detected', system: 'powertrain' },
+      { code: 'p0304', description: 'cylinder 4 misfire detected', system: 'powertrain' },
+      { code: 'p0305', description: 'cylinder 5 misfire detected', system: 'powertrain' },
+      { code: 'p0306', description: 'cylinder 6 misfire detected', system: 'powertrain' },
+      { code: 'p0325', description: 'knock sensor 1 circuit malfunction (bank 1)', system: 'powertrain' },
+      { code: 'p0335', description: 'crankshaft position sensor a circuit malfunction', system: 'powertrain' },
+      { code: 'p0340', description: 'camshaft position sensor circuit malfunction', system: 'powertrain' },
+      { code: 'p0351', description: 'ignition coil a primary/secondary circuit malfunction', system: 'powertrain' },
+      { code: 'p0401', description: 'exhaust gas recirculation flow insufficient detected', system: 'powertrain' },
+      { code: 'p0402', description: 'exhaust gas recirculation flow excessive detected', system: 'powertrain' },
+      { code: 'p0420', description: 'catalyst system efficiency below threshold (bank 1)', system: 'powertrain' },
+      { code: 'p0430', description: 'catalyst system efficiency below threshold (bank 2)', system: 'powertrain' },
+      { code: 'p0440', description: 'evaporative emission control system malfunction', system: 'powertrain' },
+      { code: 'p0441', description: 'evaporative emission control system incorrect purge flow', system: 'powertrain' },
+      { code: 'p0442', description: 'evaporative emission control system leak detected (small leak)', system: 'powertrain' },
+      { code: 'p0443', description: 'evaporative emission control system purge control valve circuit malfunction', system: 'powertrain' },
+      { code: 'p0446', description: 'evaporative emission control system vent control circuit malfunction', system: 'powertrain' },
+      { code: 'p0455', description: 'evaporative emission control system leak detected (gross leak)', system: 'powertrain' },
+      { code: 'p0461', description: 'fuel level sensor circuit range/performance', system: 'powertrain' },
+      { code: 'p0500', description: 'vehicle speed sensor malfunction', system: 'powertrain' },
+      { code: 'p0505', description: 'idle control system malfunction', system: 'powertrain' },
+      { code: 'p0506', description: 'idle control system rpm lower than expected', system: 'powertrain' },
+      { code: 'p0507', description: 'idle control system rpm higher than expected', system: 'powertrain' },
+      { code: 'p0601', description: 'internal control module memory check sum error', system: 'powertrain' },
+      { code: 'p0700', description: 'transmission control system malfunction', system: 'powertrain' },
+      { code: 'p0705', description: 'transmission range sensor circuit malfunction (prndl input)', system: 'powertrain' },
+      { code: 'p0725', description: 'engine speed input circuit malfunction', system: 'powertrain' },
+      { code: 'p0740', description: 'torque converter clutch circuit malfunction', system: 'powertrain' },
+      { code: 'p0750', description: 'shift solenoid a malfunction', system: 'powertrain' },
+      { code: 'c0035', description: 'left front wheel speed circuit malfunction', system: 'chassis' },
+      { code: 'c0040', description: 'right front wheel speed circuit malfunction', system: 'chassis' },
+      { code: 'c0045', description: 'left rear wheel speed circuit malfunction', system: 'chassis' },
+      { code: 'c0050', description: 'right rear wheel speed circuit malfunction', system: 'chassis' },
+      { code: 'c0060', description: 'left front wheel speed sensor circuit range/performance', system: 'chassis' },
+      { code: 'c1201', description: 'abs control module malfunction', system: 'chassis' },
+      { code: 'b0001', description: 'driver airbag circuit short to battery', system: 'body' },
+      { code: 'b0002', description: 'driver airbag circuit short to ground', system: 'body' },
+      { code: 'b0003', description: 'driver airbag circuit open', system: 'body' },
+      { code: 'b1000', description: 'electronic control module is not programmed', system: 'body' },
+      { code: 'u0001', description: 'high speed can communication bus', system: 'network' },
+      { code: 'u0100', description: 'lost communication with ecm/pcm', system: 'network' },
+      { code: 'u0101', description: 'lost communication with tcm', system: 'network' },
+      { code: 'u0121', description: 'lost communication with abs control module', system: 'network' },
+      { code: 'u0140', description: 'lost communication with body control module', system: 'network' }
+    ];
+    
+    let selectedSystem = 'all';
+    let searchTerm = '';
+    
+    function getSystemCounts() {
+      return {
+        all: obd2codes.length,
+        powertrain: obd2codes.filter(c => c.system === 'powertrain').length,
+        chassis: obd2codes.filter(c => c.system === 'chassis').length,
+        body: obd2codes.filter(c => c.system === 'body').length,
+        network: obd2codes.filter(c => c.system === 'network').length
+      };
+    }
+    
+    function filterCodes() {
+      let filtered = obd2codes;
+      
+      if (selectedSystem !== 'all') {
+        filtered = filtered.filter(item => item.system === selectedSystem);
+      }
+      
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        filtered = filtered.filter(item => 
+          item.code.toLowerCase().includes(term) || 
+          item.description.toLowerCase().includes(term)
+        );
+      }
+      
+      return filtered;
+    }
+    
+    function renderFilters() {
+      const filtersEl = document.getElementById('filters');
+      const systems = ['all', 'powertrain', 'chassis', 'body', 'network'];
+      const counts = getSystemCounts();
+      
+      filtersEl.innerHTML = systems.map(system => `
+        <button 
+          class="filter-btn ${selectedSystem === system ? 'active' : ''}" 
+          onclick="selectSystem('${system}')"
+        >
+          ${system} (${counts[system]})
+        </button>
+      `).join('');
+    }
+    
+    function renderCodes() {
+      const codeListEl = document.getElementById('codeList');
+      const resultsCountEl = document.getElementById('resultsCount');
+      const filtered = filterCodes();
+      
+      resultsCountEl.textContent = `showing ${filtered.length} code${filtered.length !== 1 ? 's' : ''}`;
+      
+      if (filtered.length === 0) {
+        codeListEl.innerHTML = '<div class="no-results">no codes found matching your search</div>';
+        return;
+      }
+      
+      codeListEl.innerHTML = filtered.map(item => `
+        <div class="code-item">
+          <div class="code-header">
+            <span class="code-number">${item.code}</span>
+            <span class="code-badge">${item.system}</span>
+          </div>
+          <p class="code-description">${item.description}</p>
+        </div>
+      `).join('');
+    }
+    
+    function selectSystem(system) {
+      selectedSystem = system;
+      renderFilters();
+      renderCodes();
+    }
+    
+    function handleSearch(event) {
+      searchTerm = event.target.value;
+      renderCodes();
+    }
+    
+    document.getElementById('searchInput').addEventListener('input', handleSearch);
+    
+    renderFilters();
+    renderCodes();
+  </script>
+</body>
+</html>
